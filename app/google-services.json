@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "156803178678",
+    "project_id": "notes-hub-388ce",
+    "storage_bucket": "notes-hub-388ce.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:156803178678:android:ada26f116cb65c74390617",
+        "android_client_info": {
+          "package_name": "com.example.noteshub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD89WnU893YV1JPwV3dOe68Rq4rmbms6PE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
