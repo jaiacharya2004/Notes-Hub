@@ -8,12 +8,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,10 +24,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.noteshub.R
 import com.example.noteshub.viewmodel.AuthViewModel
 
@@ -38,6 +33,7 @@ import com.example.noteshub.viewmodel.AuthViewModel
 fun OtpVerificationUI(navController: NavController, viewModel: AuthViewModel) {
     val otpCodeList = remember { mutableStateListOf("", "", "", "", "", "") }
     var isOtpValid by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf("") } // Add a state for error message
 
     // Observe the authentication state
     val authState by viewModel.authState.collectAsState()
@@ -64,7 +60,7 @@ fun OtpVerificationUI(navController: NavController, viewModel: AuthViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Enter OTP sent to your phone",
+                text = "Enter Verification Code",
                 color = Color.White,
                 fontSize = 26.sp
             )
@@ -89,29 +85,28 @@ fun OtpVerificationUI(navController: NavController, viewModel: AuthViewModel) {
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedContainerColor = Color.White,
                             unfocusedContainerColor = Color.White,
-                            cursorColor = Color.Black,
-//                            focusedIndicatorColor = Color.Transparent, // Set indicator colors to transparent
-//                            unfocusedIndicatorColor = Color.Transparent
+                            cursorColor = Color.Black
                         ),
                         textStyle = TextStyle(fontSize = 24.sp, color = Color.Black),
                         shape = RoundedCornerShape(12.dp),
                         onValueChange = { newValue ->
-                            if (newValue.length <= 1) {
-                                otpCodeList[i] = newValue
-                                if (newValue.isNotEmpty() && i < 5) {
-                                    // Move to the next field
-                                    focusRequesterList[i + 1].requestFocus()
+                            if (newValue.isEmpty()) {
+                                otpCodeList[i] = "" // Clear current field
+                                if (i > 0) {
+                                    focusRequesterList[i - 1].requestFocus() // Move focus to previous field
                                 }
-                            } else if (newValue.isEmpty() && i > 0) {
-                                // Move to the previous field when backspace is pressed
-                                focusRequesterList[i - 1].requestFocus()
+                            } else if (newValue.length == 1) {
+                                otpCodeList[i] = newValue // Update field
+                                if (i < 5) {
+                                    focusRequesterList[i + 1].requestFocus() // Move to next field if not the last one
+                                }
                             }
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
                         modifier = Modifier
-                            .width(45.dp) // Width for each box
+                            .width(45.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .focusRequester(focusRequesterList[i]) // Use FocusRequester correctly
+                            .focusRequester(focusRequesterList[i])
                     )
                 }
             }
@@ -123,18 +118,21 @@ fun OtpVerificationUI(navController: NavController, viewModel: AuthViewModel) {
                     val otpCode = otpCodeList.joinToString("") // Combine the OTP digits
                     if (otpCode.length == 6) {
                         viewModel.verifyOtp(otpCode)
+                        errorMessage = "" // Clear any previous error message
                     } else {
                         isOtpValid = false // Handle invalid OTP case
+                        errorMessage = "Please enter the verification code" // Set error message
                     }
                 },
                 modifier = Modifier.fillMaxWidth(0.8f)
             ) {
-                Text(text = "Verify OTP")
+                Text(text = "Verify Code")
             }
 
-            if (!isOtpValid) {
+            // Display error message if OTP is invalid or empty
+            if (!isOtpValid || errorMessage.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "Invalid OTP", color = Color.Red)
+                Text(text = errorMessage, color = Color.Red)
             }
 
             // Handle navigation based on auth state

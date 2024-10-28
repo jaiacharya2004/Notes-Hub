@@ -33,6 +33,7 @@ import com.example.noteshub.R
 @Composable
 fun AuthScreen(navController: NavController, viewModel: AuthViewModel) {
     var phoneNumber by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf("") } // State for error message
     val context = LocalContext.current
     val activity = context as? ComponentActivity
 
@@ -71,52 +72,82 @@ fun AuthScreen(navController: NavController, viewModel: AuthViewModel) {
                 color = Color.White,
                 fontSize = 26.sp,
                 modifier = Modifier
-                .offset(x = offsetX.value.dp) // Apply the animated offset
-
+                    .offset(x = offsetX.value.dp) // Apply the animated offset
             )
             Spacer(modifier = Modifier.height(62.dp))
 
             Image(
                 painter = painterResource(id = R.drawable.otp_verification),
                 contentDescription = "Auth Screen",
-                modifier = Modifier
-                    .size(192.dp)
+                modifier = Modifier.size(192.dp)
             )
 
             Spacer(modifier = Modifier.height(102.dp))
 
-            // Input for phone number
-            OutlinedTextField(
-                value = phoneNumber,
-                shape = RoundedCornerShape(12.dp),
-                onValueChange = { phoneNumber = it },
-                label = { Text("Phone Number", color = Color.LightGray) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
+            // Row to show +91 prefix and input for phone number
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .padding(start = 20.dp, end = 20.dp)
-                    .fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    Color.White,
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.Gray,
-                    cursorColor = Color.White,
-                ),
-                textStyle = TextStyle(fontSize = 18.sp)
-            )
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = "+91",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+
+                // Input for phone number
+                OutlinedTextField(
+                    value = phoneNumber,
+                    shape = RoundedCornerShape(12.dp),
+                    onValueChange = {
+                        // Allow only numbers and limit to 10 digits
+                        if (it.length <= 10 && it.all { char -> char.isDigit() }) {
+                            phoneNumber = it
+                        }
+                    },
+                    label = { Text("Phone Number", color = Color.LightGray) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.Gray,
+                        cursorColor = Color.White,
+                    ),
+                    textStyle = TextStyle(fontSize = 18.sp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Button to send OTP
-            Button(onClick = {
-                activity?.let {
-                    viewModel.sendOtp(phoneNumber, it)
-                    navController.navigate("otp_verification") // Navigate to OTP verification screen
-                }
-            },
+            Button(
+                onClick = {
+                    // Only send OTP if phone number has exactly 10 digits
+                    if (phoneNumber.length == 10) {
+                        activity?.let {
+                            viewModel.sendOtp("+91$phoneNumber", it)
+                            navController.navigate("otp_verification") // Navigate to OTP verification screen
+                            errorMessage = "" // Clear any previous error messages
+                        }
+                    } else {
+                        errorMessage = "Please enter a valid 10-digit phone number" // Set error message
+                    }
+                },
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(0.8f)
+                modifier = Modifier
+                    .padding(start = 20.dp).fillMaxWidth(0.6f)
             ) {
-                Text(text = "Send OTP", fontSize = 18.sp)
+                Text(text = "Submit", fontSize = 18.sp)
+            }
+
+            // Display error message if any
+            if (errorMessage.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = errorMessage, color = Color.Red)
             }
 
             // Handle navigation based on auth state (if needed)
