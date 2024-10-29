@@ -6,27 +6,52 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.noteshub.screens.auth.AuthScreen
 import com.example.noteshub.screens.auth.OtpVerificationUI
-import com.example.noteshub.viewmodel.AuthViewModel
+import com.example.noteshub.screens.home.FolderDetailScreen
 import com.example.noteshub.screens.home.HomeScreen
+import com.example.noteshub.viewmodel.AuthViewModel
+import com.example.noteshub.viewmodel.HomeViewModel
 
 @Composable
 fun SetupNavGraph(
     navController: NavHostController,
-    authViewModel: AuthViewModel
+    startDestination: String,
+    authViewModel: AuthViewModel,
+    homeViewModel: HomeViewModel
 ) {
-    // Use NavHost as a composable function
     NavHost(
         navController = navController,
-        startDestination = "auth"
+        startDestination = startDestination
     ) {
         composable("auth") {
-            AuthScreen(navController = navController, viewModel = authViewModel)
+            AuthScreen(
+                navController = navController,
+                viewModel = authViewModel,
+                onLoginSuccess = {
+                    // Define what happens on successful login
+                    navController.navigate("otp_verification") {
+                        popUpTo("auth") { inclusive = true } // Clear back stack
+                    }
+                }
+            )
         }
         composable("otp_verification") {
             OtpVerificationUI(navController = navController, viewModel = authViewModel)
         }
         composable("home") {
-            HomeScreen(navController = navController)  // Ensure HomeScreen is defined
+            HomeScreen(
+                navController = navController,
+                viewModel = homeViewModel,
+                authViewModel = authViewModel // Pass the AuthViewModel
+            )
+        }
+        composable("folder/{folderName}") { backStackEntry ->
+            val folderName = backStackEntry.arguments?.getString("folderName")
+            val folder = homeViewModel.getFolderByName(folderName ?: "")
+            if (folder != null) {
+                FolderDetailScreen(navController = navController, folder = folder)
+            } else {
+                // Handle the case where the folder is not found, if needed
+            }
         }
     }
 }

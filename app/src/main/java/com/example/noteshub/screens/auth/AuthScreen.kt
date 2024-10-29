@@ -1,6 +1,5 @@
 package com.example.noteshub.screens.auth
 
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
@@ -11,57 +10,46 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.noteshub.viewmodel.AuthViewModel
-import androidx.activity.ComponentActivity
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.animation.core.Animatable
+import com.example.noteshub.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.sp
-import com.example.noteshub.R
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.res.painterResource
+import kotlinx.coroutines.launch
+import com.example.noteshub.viewmodel.TestPhoneNumbers
 
 @Composable
-fun AuthScreen(navController: NavController, viewModel: AuthViewModel) {
+fun AuthScreen(navController: NavController, viewModel: AuthViewModel, onLoginSuccess: () -> Unit) {
     var phoneNumber by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf("") } // State for error message
+    var errorMessage by remember { mutableStateOf("") }
     val context = LocalContext.current
-    val activity = context as? ComponentActivity
-
-    // Observe the authentication state
     val authState by viewModel.authState.collectAsState()
 
-    val offsetX = remember { Animatable(300f) } // Start off-screen to the right
-
-    LaunchedEffect(Unit) {
-        // Animate the text sliding in from the right
-        offsetX.animateTo(
-            targetValue = 0f,
-            animationSpec = tween(durationMillis = 1000) // Duration for the slide-in animation
-        )
+    // Handle login success
+    LaunchedEffect(authState) {
+        when (authState) {
+            is AuthViewModel.AuthState.Success -> {
+                onLoginSuccess() // This should navigate to "home" or handle successful login
+            }
+            is AuthViewModel.AuthState.Error -> {
+                errorMessage = (authState as AuthViewModel.AuthState.Error).message
+            }
+            else -> {}
+        }
     }
 
-    // Box with background
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF4A148C), // Purple color
-                        Color.Black
-                    )
-                )
-            )
+            .background(Color(0xFF4A148C))
     ) {
         Column(
             modifier = Modifier.padding(top = 76.dp),
@@ -70,9 +58,7 @@ fun AuthScreen(navController: NavController, viewModel: AuthViewModel) {
             Text(
                 text = "Welcome to Notes Hub",
                 color = Color.White,
-                fontSize = 26.sp,
-                modifier = Modifier
-                    .offset(x = offsetX.value.dp) // Apply the animated offset
+                fontSize = 26.sp
             )
             Spacer(modifier = Modifier.height(62.dp))
 
@@ -84,7 +70,6 @@ fun AuthScreen(navController: NavController, viewModel: AuthViewModel) {
 
             Spacer(modifier = Modifier.height(102.dp))
 
-            // Row to show +91 prefix and input for phone number
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -98,12 +83,10 @@ fun AuthScreen(navController: NavController, viewModel: AuthViewModel) {
                     modifier = Modifier.padding(end = 8.dp)
                 )
 
-                // Input for phone number
                 OutlinedTextField(
                     value = phoneNumber,
                     shape = RoundedCornerShape(12.dp),
                     onValueChange = {
-                        // Allow only numbers and limit to 10 digits
                         if (it.length <= 10 && it.all { char -> char.isDigit() }) {
                             phoneNumber = it
                         }
@@ -115,7 +98,7 @@ fun AuthScreen(navController: NavController, viewModel: AuthViewModel) {
                         Color.White,
                         focusedBorderColor = Color.White,
                         unfocusedBorderColor = Color.Gray,
-                        cursorColor = Color.White,
+                        cursorColor = Color.White
                     ),
                     textStyle = TextStyle(fontSize = 18.sp)
                 )
@@ -123,40 +106,30 @@ fun AuthScreen(navController: NavController, viewModel: AuthViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Button to send OTP
             Button(
                 onClick = {
-                    // Only send OTP if phone number has exactly 10 digits
+                    val fullPhoneNumber = "+91$phoneNumber"
                     if (phoneNumber.length == 10) {
-                        activity?.let {
-                            viewModel.sendOtp("+91$phoneNumber", it)
-                            navController.navigate("otp_verification") // Navigate to OTP verification screen
-                            errorMessage = "" // Clear any previous error messages
+                        if (TestPhoneNumbers.validNumbers.contains(fullPhoneNumber)) {
+                            errorMessage = "" // Clear previous error messages
+                            viewModel.phoneNumber = fullPhoneNumber // Set the phone number in the ViewModel
+                            navController.navigate("otp_verification") // Navigate to OTP verification UI
+                        } else {
+                            errorMessage = "Invalid phone number"
                         }
                     } else {
-                        errorMessage = "Please enter a valid 10-digit phone number" // Set error message
+                        errorMessage = "Please enter a valid 10-digit phone number"
                     }
                 },
                 shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .padding(start = 20.dp).fillMaxWidth(0.6f)
+                modifier = Modifier.padding(start = 20.dp).fillMaxWidth(0.6f)
             ) {
                 Text(text = "Submit", fontSize = 18.sp)
             }
 
-            // Display error message if any
             if (errorMessage.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(text = errorMessage, color = Color.Red)
-            }
-
-            // Handle navigation based on auth state (if needed)
-            when (authState) {
-                is AuthViewModel.AuthState.Error -> {
-                    Text(text = (authState as AuthViewModel.AuthState.Error).message, color = Color.Red)
-                }
-                // Other states can be handled if necessary
-                else -> {}
             }
         }
     }
