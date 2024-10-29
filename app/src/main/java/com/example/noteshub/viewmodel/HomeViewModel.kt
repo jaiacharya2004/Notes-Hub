@@ -5,20 +5,18 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.FirebaseAuth
 
-
 class HomeViewModel : ViewModel() {
-    // Backing property for the list of folders
+
     private val _folders = MutableLiveData<List<Folder>?>(emptyList())
-    val folders: LiveData<List<Folder>?> get() = _folders // Expose only LiveData
+    val folders: MutableLiveData<List<Folder>?> get() = _folders
 
-    private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance() // Initialize FirebaseAuth
-
+    private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
 
     init {
         loadFolders()
     }
 
-    // Load initial dummy folders
+    // Load initial folders
     private fun loadFolders() {
         val dummyFolders = listOf(
             Folder("BCA 1st Year", 24, "432 MB", listOf(
@@ -52,34 +50,31 @@ class HomeViewModel : ViewModel() {
         _folders.value = dummyFolders
     }
 
-    // Function to add a sub-folder to a parent folder
-    fun addSubFolder(parentFolder: Folder, newFolder: Folder) {
-        val currentList = _folders.value?.toMutableList() ?: mutableListOf()
-        val updatedFolders = currentList.map { folder ->
-            if (folder.name == parentFolder.name) {
-                val updatedSubFolders = folder.subFolders + newFolder
-                folder.copy(subFolders = updatedSubFolders) // Update subfolders
+    // Function to add a subfolder to a specific parent folder
+    fun addSubFolder(parentFolderName: String, newFolderName: String) {
+        val currentList = _folders.value?.map { folder ->
+            if (folder.name == parentFolderName) {
+                val updatedSubFolders = folder.subFolders + Folder(newFolderName, 0, "0 MB")
+                folder.copy(subFolders = updatedSubFolders)
             } else {
                 folder
             }
         }
-        _folders.value = updatedFolders
+        _folders.value = currentList // Update the LiveData to reflect changes in UI
     }
 
-    // Function to delete a folder
-    fun deleteFolder(folder: Folder) {
-        val currentList = _folders.value?.toMutableList()
-        currentList?.remove(folder)
-        _folders.value = currentList
+
+    // Function to delete a folder by name
+    fun deleteFolder(folderName: String) {
+        _folders.value = _folders.value?.filter { it.name != folderName }
     }
 
-    // Function to get a folder by name
+    // Function to find a folder by its name
     fun getFolderByName(name: String): Folder? {
         return _folders.value?.find { it.name == name }
     }
 
-
-    // Optional: Reset or clear folders on sign-out
+    // Optional: Reset folders on sign-out
     fun clearFolders() {
         _folders.value = emptyList()
     }

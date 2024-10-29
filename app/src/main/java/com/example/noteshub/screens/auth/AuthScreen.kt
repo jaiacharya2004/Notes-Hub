@@ -1,5 +1,7 @@
 package com.example.noteshub.screens.auth
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
@@ -33,6 +35,19 @@ fun AuthScreen(navController: NavController, viewModel: AuthViewModel, onLoginSu
     val context = LocalContext.current
     val authState by viewModel.authState.collectAsState()
 
+
+    val offsetX = remember { Animatable(300f) } // Start off-screen to the right
+
+    LaunchedEffect(Unit) {
+        // Animate the text sliding in from the right
+        offsetX.animateTo(
+            targetValue = 0f,
+            animationSpec = tween(durationMillis = 1000) // Duration for the slide-in animation
+        )
+    }
+
+
+
     // Handle login success
     LaunchedEffect(authState) {
         when (authState) {
@@ -58,7 +73,8 @@ fun AuthScreen(navController: NavController, viewModel: AuthViewModel, onLoginSu
             Text(
                 text = "Welcome to Notes Hub",
                 color = Color.White,
-                fontSize = 26.sp
+                fontSize = 26.sp,
+                modifier = Modifier.offset(x = offsetX.value.dp)
             )
             Spacer(modifier = Modifier.height(62.dp))
 

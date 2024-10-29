@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -30,6 +31,10 @@ import com.example.noteshub.viewmodel.AuthViewModel
 fun OtpVerificationUI(navController: NavController, viewModel: AuthViewModel) {
     var verificationCode by remember { mutableStateOf("") }
     var isCodeValid by remember { mutableStateOf(true) }
+    val context = LocalContext.current
+
+    // Initialize PreferenceManager in your Application class or MainActivity
+    PreferenceManager.init(context)
 
     Box(
         modifier = Modifier
@@ -49,7 +54,7 @@ fun OtpVerificationUI(navController: NavController, viewModel: AuthViewModel) {
             )
             Spacer(modifier = Modifier.height(110.dp))
 
-            Image(painter = painterResource(id =R.drawable.otp_verification ), contentDescription = "Otp Verification Image")
+            Image(painter = painterResource(id = R.drawable.otp_verification), contentDescription = "Otp Verification Image")
 
             Spacer(modifier = Modifier.height(110.dp))
 
@@ -76,7 +81,7 @@ fun OtpVerificationUI(navController: NavController, viewModel: AuthViewModel) {
                 onClick = {
                     if (verificationCode == "123456") {
                         // Navigate to home screen
-                        PreferenceManager.setLoggedIn(navController.context, true)
+                        PreferenceManager.setLoggedIn(true)
                         navController.navigate("home") {
                             popUpTo("otp_verification") { inclusive = true }
                         }

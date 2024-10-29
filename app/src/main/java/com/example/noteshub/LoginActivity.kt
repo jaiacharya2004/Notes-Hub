@@ -1,39 +1,62 @@
 package com.example.noteshub
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.lifecycle.ViewModelProvider
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.noteshub.utils.PreferenceManager
 import com.example.noteshub.screens.auth.AuthScreen
+import com.example.noteshub.screens.home.HomeScreen
+import com.example.noteshub.utils.PreferenceManager
 import com.example.noteshub.viewmodel.AuthViewModel
+import com.example.noteshub.viewmodel.HomeViewModel
 
 class LoginActivity : ComponentActivity() {
-    private lateinit var authViewModel: AuthViewModel // Declare ViewModel without Koin
+    private lateinit var authViewModel: AuthViewModel
+    private lateinit var homeViewModel: HomeViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Initialize the ViewModel using ViewModelProvider
-        authViewModel = ViewModelProvider(this).get(AuthViewModel::class.java)
+        PreferenceManager.init(this)
+        authViewModel = AuthViewModel()
+        homeViewModel = HomeViewModel()
 
         setContent {
-            val navController = rememberNavController() // Create a NavController
+            val navController = rememberNavController()
+            AppNavigation(navController, authViewModel, homeViewModel)
+        }
+    }
+}
 
+@Composable
+fun AppNavigation(
+    navController: NavHostController,
+    authViewModel: AuthViewModel,
+    homeViewModel: HomeViewModel
+) {
+    NavHost(
+        navController = navController,
+        startDestination = if (PreferenceManager.isLoggedIn()) "home" else "auth"
+    ) {
+        composable("auth") {
             AuthScreen(
                 navController = navController,
                 viewModel = authViewModel,
                 onLoginSuccess = {
-                    // Save login status
-                    PreferenceManager.setLoggedIn(this, true)
-                    // Navigate to OtpVerificationActivity after successful login
-                    startActivity(Intent(this, OtpVerificationActivity::class.java))
-                    finish()
+                    PreferenceManager.setLoggedIn(true)
+                    navController.navigate("home") {
+                        popUpTo("auth") { inclusive = true } // Clear the back stack
+                    }
                 }
             )
-
+        }
+        composable("home") {
+            HomeScreen(navController = navController, viewModel = homeViewModel, authViewModel = authViewModel)
         }
     }
 }

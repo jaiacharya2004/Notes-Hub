@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.noteshub.utils.PreferenceManager
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -99,7 +100,8 @@ class AuthViewModel : ViewModel() {
 
 
     fun signOut() {
-        firebaseAuth.signOut() // Sign out from Firebase
+        // Update login status to false
+        PreferenceManager.setLoggedIn(false)
     }
 
 
