@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,7 +25,8 @@ class LoginActivity : ComponentActivity() {
 
         PreferenceManager.init(this)
         authViewModel = AuthViewModel()
-        homeViewModel = HomeViewModel()
+        homeViewModel = HomeViewModel(savedStateHandle = SavedStateHandle())
+
 
         setContent {
             val navController = rememberNavController()

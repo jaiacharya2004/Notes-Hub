@@ -7,7 +7,6 @@ import androidx.navigation.compose.composable
 import com.example.noteshub.screens.auth.AuthScreen
 import com.example.noteshub.screens.auth.OtpVerificationUI
 import com.example.noteshub.screens.auth.SettingsScreen
-import com.example.noteshub.screens.home.FolderDetailScreen
 import com.example.noteshub.screens.home.HomeScreen
 import com.example.noteshub.viewmodel.AuthViewModel
 import com.example.noteshub.viewmodel.HomeViewModel
@@ -52,12 +51,6 @@ fun SetupNavGraph(
                 }
             })
         }
-        composable("folder/{folderName}") { backStackEntry ->
-            val folderName = backStackEntry.arguments?.getString("folderName")
-            val folder = homeViewModel.getFolderByName(folderName ?: "")
-            if (folder != null) {
-                FolderDetailScreen(navController = navController, folder = folder, homeViewModel = homeViewModel)
-            }
-        }
     }
 }
+
